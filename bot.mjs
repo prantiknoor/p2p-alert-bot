@@ -10,7 +10,7 @@ const WISE_PAYMENT_METHOD = '78';
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
-export const bot = new Telegraf(BOT_TOKEN);
+const bot = new Telegraf(BOT_TOKEN);
 const p2pAlertBybit = new P2PAlertBybit();
 
 const userState = new Map();
@@ -141,3 +141,5 @@ bot.on('text', (ctx) => {
 // Enable graceful stop on process termination signals
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
+export default bot;
