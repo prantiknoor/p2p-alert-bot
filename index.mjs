@@ -6,7 +6,12 @@ const PORT = 3000;
 const REDIRECT_URL = 'https://github.com/prantiknoor/p2p-alert-bot';
 
 const server = http.createServer((_req, res) => {
-  res.writeHead(302, { Location: REDIRECT_URL });
+  if (_req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.write('OK');
+  } else {
+    res.writeHead(302, { Location: REDIRECT_URL });
+  }
   res.end();
 });
 
