@@ -27,7 +27,8 @@ export class P2PAlertBybit extends EventEmitter {
 
         const msg = ads.map((ad, i) => {
           const url = `https://www.bybit.com/en/fiat/trade/otc/profile/${ad.userMaskId}/USDT/USD/item`
-          const text = `<b>${ad.nickName}</b> is selling USDT at $${ad.price}`
+          // const text = `<b>${ad.nickName}</b> is selling USDT at $${ad.price} ${ad}`
+          const text = `<b>${ad.nickName}</b> | ${ad.minAmount}~${ad.maxAmount} USD | ${ad.quantity} USDT | <b>$${ad.price}</b>`
           return `${i + 1}. <a href="${url}">${text}</a>`
         }).join('\n');
 
