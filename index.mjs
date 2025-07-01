@@ -5,8 +5,10 @@ import bot from "./bot.mjs";
 const PORT = 3000;
 const REDIRECT_URL = 'https://github.com/prantiknoor/p2p-alert-bot';
 
-const server = http.createServer((_req, res) => {
-  if (_req.url === '/health') {
+const server = http.createServer((req, res) => {
+  console.log(`${req.method} ${req.url} from ${req.socket.remoteAddress}`);
+
+  if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.write('OK');
   } else {
