@@ -18,7 +18,7 @@ export class P2PAlertBybit extends EventEmitter {
   start(id, { paymentMethod, maxPrice, minAmount, maxOfMin }) {
     console.log("Started:", id);
 
-    if (this.interval) clearInterval(this.interval);
+    if (this.intervals[id]) clearInterval(this.intervals[id]);
 
     const _run = async () => {
       const ads = await this.getP2POnlineAds({ paymentMethod, maxPrice, minAmount, maxOfMin });
@@ -63,19 +63,3 @@ export class P2PAlertBybit extends EventEmitter {
     return ads;
   }
 }
-
-
-
-
-
-// const ads = await getP2POnlineAds({
-//   paymentMethod: WISE_PAYMENT_METHOD,
-//   minAmount: MIN_AMOUNT,
-//   maxPrice: MIN_PRICE
-// })
-
-// console.log(ads
-
-// );
-
-// https://www.bybit.com/en/fiat/trade/otc/profile/{ad.userMaskId}/USDT/USD/item

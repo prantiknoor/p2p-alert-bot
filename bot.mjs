@@ -96,13 +96,17 @@ bot.on('text', (ctx) => {
         state.isProcessRunning = true;
         userState.set(ctx.from.id, state);
 
-        p2pAlertBybit.start(ctx.from.id, {
-          paymentMethod: WISE_PAYMENT_METHOD,
-          minAmount: minAmount,
-          maxOfMin: maxOfMin,
-          maxPrice: state.MAX_PRICE || MAX_PRICE
-        });
-
+        try {
+          p2pAlertBybit.start(ctx.from.id, {
+            paymentMethod: WISE_PAYMENT_METHOD,
+            minAmount: minAmount,
+            maxOfMin: maxOfMin,
+            maxPrice: state.MAX_PRICE || MAX_PRICE
+          });
+  
+        } catch (error) {
+          console.log(error);
+        }
         console.log(`Process started for user ${ctx.from.id} with minAmount: ${minAmount}, maxOfMin: ${maxOfMin}`);
 
         ctx.reply(`Process has started.\n` +
