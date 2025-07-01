@@ -10,7 +10,7 @@ const WISE_PAYMENT_METHOD = '78';
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
-const bot = new Telegraf(BOT_TOKEN);
+export const bot = new Telegraf(BOT_TOKEN);
 const p2pAlertBybit = new P2PAlertBybit();
 
 const userState = new Map();
@@ -36,11 +36,16 @@ bot.start((ctx) => {
     return ctx.reply('You are not allowed to use the bot.');
   }
 
-  if (userState.has(ctx.from.id)) {
+  let state = userState.get(ctx.from.id);
+
+  if (state?.isProcessRunning) {
     return ctx.reply('A process is already running. Use /stop to stop it.');
   }
 
-  userState.set(ctx.from.id, { isAskingAmount: true, isProcessRunning: false });
+  state = state ?? { isProcessRunning: false }
+  state.isAskingAmount = true;
+
+  userState.set(ctx.from.id, state);
 
   ctx.reply('Welcome! Please enter the amount range as "min-max" (e.g., 200-500) to start the process.');
 });
@@ -49,7 +54,8 @@ bot.command('stop', (ctx) => {
   const state = userState.get(ctx.from.id);
 
   if (state && state.isProcessRunning) {
-    userState.delete(ctx.from.id)
+    state.isProcessRunning = false;
+    userState.set(ctx.from.id, state)
 
     p2pAlertBybit.stop(ctx.from.id)
 
@@ -60,6 +66,13 @@ bot.command('stop', (ctx) => {
 });
 
 bot.command('setmaxprice', (ctx) => {
+  const state = userState.get(ctx.from.id)
+  if (!state) {
+    return ctx.reply('Please start the bot first using /start.');
+  } else if (state.isProcessRunning) {
+    return ctx.reply('You cannot change the maximum price while a process is running. Please use /stop to stop the current process first.');
+  }
+
   const args = ctx.message.text.split(' ').slice(1);
   if (args.length !== 1) {
     return ctx.reply('Usage: /setmaxprice <price>');
@@ -69,14 +82,10 @@ bot.command('setmaxprice', (ctx) => {
   if (isNaN(newPrice) || newPrice <= 0) {
     return ctx.reply('Please provide a valid positive number for the price.');
   }
-  const state = userState.get(ctx.from.id)
-  if (state) {
-    state.MAX_PRICE = newPrice;
-    userState.set(ctx.from.id, state)
-    ctx.reply(`Maximum price has been set to $${newPrice}`);
-  } else {
-    ctx.reply('Please start the bot first using /start.');
-  }
+
+  state.MAX_PRICE = newPrice;
+  userState.set(ctx.from.id, state)
+  ctx.reply(`Maximum price has been set to $${newPrice}`);
 });
 
 bot.on('text', (ctx) => {
@@ -103,7 +112,7 @@ bot.on('text', (ctx) => {
             maxOfMin: maxOfMin,
             maxPrice: state.MAX_PRICE || MAX_PRICE
           });
-  
+
         } catch (error) {
           console.log(error);
         }
@@ -125,13 +134,6 @@ bot.on('text', (ctx) => {
   } else {
     ctx.reply('Please use the /start command to begin.');
   }
-});
-
-// --- Bot Launch ---
-
-// Start the bot using polling
-bot.launch(() => {
-  console.log('Bot started successfully!');
 });
 
 // --- Graceful Shutdown ---

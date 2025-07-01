@@ -2,9 +2,9 @@
   "name": "p2p-alert-bot",
   "version": "1.0.0",
   "description": "",
-  "main": "bot.mjs",
+  "main": "index.mjs",
   "scripts": {
-    "start": "node bot.mjs"
+    "start": "node index.mjs"
   },
   "keywords": [],
   "author": "Prantik",
