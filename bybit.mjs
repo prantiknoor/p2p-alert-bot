@@ -25,14 +25,13 @@ export class P2PAlertBybit extends EventEmitter {
         const ads = await this.getP2POnlineAds({ paymentMethod, maxPrice, minAmount, maxOfMin });
         console.log(ads.length);
 
-        const msg = ads.map((ad, i) => {
+        const formattedAds = ads.map((ad, i) => {
           const url = `https://www.bybit.com/en/fiat/trade/otc/profile/${ad.userMaskId}/USDT/USD/item`
-          // const text = `<b>${ad.nickName}</b> is selling USDT at $${ad.price} ${ad}`
           const text = `<b>${ad.nickName}</b> | ${ad.minAmount}~${ad.maxAmount} USD | ${ad.quantity} USDT | <b>$${ad.price}</b>`
-          return `${i + 1}. <a href="${url}">${text}</a>`
-        }).join('\n');
+          return `<a href="${url}">${text}</a>`
+        });
 
-        if (msg) this.emit("ad", { id, msg });
+        if (formattedAds) this.emit("ad", { id, ads: formattedAds });
       } catch (err) {
         console.error("Error in _run:", err);
         this.emit("error", err);

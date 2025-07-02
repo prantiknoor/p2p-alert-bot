@@ -2,6 +2,7 @@
 import 'dotenv/config';
 import { Telegraf } from 'telegraf';
 import { P2PAlertBybit } from './bybit.mjs';
+import { message } from 'telegraf/filters';
 
 const MIN_AMOUNT = 500.0;
 const MAX_OF_MIN = 1000.0
@@ -21,12 +22,26 @@ bot.telegram.setMyCommands([
   { command: 'setmaxprice', description: 'Set the maximum price of USDT (e.g. /setmaxprice 1.05)' }
 ]);
 
-// bot.telegram.comm
+p2pAlertBybit.on('ad', ({ id, ads }) => {
+  const state = userState.get(id);
+  const prevSentAds = state?.prevSentAds ?? [];
+  const messages = []; let i = prevSentAds.length;
 
-p2pAlertBybit.on('ad', ({ id, msg }) => {
-  console.log({ id, msg });
+  for (const ad of ads) {
+    if (!prevSentAds.includes(ad)) {
+      messages.push(`${++i}. ${ad}`);
+      prevSentAds.push(ad);
+    };
+  }
 
-  bot.telegram.sendMessage(id, msg, { parse_mode: 'HTML' });
+  state.prevSentAds = prevSentAds;
+  userState.set(prevSentAds);
+
+  const message = messages.join('\n');
+
+  console.log({ id, ads, message });
+
+  if (message) bot.telegram.sendMessage(id, message, { parse_mode: 'HTML' });
 })
 
 bot.start((ctx) => {
@@ -55,6 +70,7 @@ bot.command('stop', (ctx) => {
 
   if (state && state.isProcessRunning) {
     state.isProcessRunning = false;
+    state.prevSentAds = [];
     userState.set(ctx.from.id, state)
 
     p2pAlertBybit.stop(ctx.from.id)
@@ -120,7 +136,7 @@ bot.on('text', (ctx) => {
 
         ctx.reply(`Process has started.\n` +
           `Payment Method: Wise\n` +
-          `Maximum Price: $${MAX_PRICE}\n` +
+          `Maximum Price: $${state.MAX_PRICE || MAX_PRICE}\n` +
           `Minimum Amount: $${minAmount}\n` +
           `Maximum Amount: $${maxOfMin}`)
       } else {
