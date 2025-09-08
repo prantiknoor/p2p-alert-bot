@@ -2,7 +2,6 @@
 import 'dotenv/config';
 import { Telegraf } from 'telegraf';
 import { P2PAlertBybit } from './bybit.mjs';
-import { message } from 'telegraf/filters';
 
 const MIN_AMOUNT = 500.0;
 const MAX_OF_MIN = 1000.0
@@ -114,8 +113,8 @@ bot.on('text', (ctx) => {
     const match = text.match(/^(\d+(?:\.\d+)?)[\s,-]+(\d+(?:\.\d+)?)/);
     if (match) {
       const minAmount = parseFloat(match[1]);
-      const maxOfMin = parseFloat(match[2]);
-      if (minAmount > 0 && maxOfMin > 0 && minAmount <= maxOfMin) {
+      const maxAmount = parseFloat(match[2]);
+      if (minAmount > 0 && maxAmount > 0 && minAmount <= maxAmount) {
         // Update the user's state
         state.isAskingAmount = false;
         state.isProcessRunning = true;
@@ -125,20 +124,20 @@ bot.on('text', (ctx) => {
           p2pAlertBybit.start(ctx.from.id, {
             paymentMethod: WISE_PAYMENT_METHOD,
             minAmount: minAmount,
-            maxOfMin: maxOfMin,
+            maxAmount: maxAmount,
             maxPrice: state.MAX_PRICE || MAX_PRICE
           });
 
         } catch (error) {
           console.log(error);
         }
-        console.log(`Process started for user ${ctx.from.id} with minAmount: ${minAmount}, maxOfMin: ${maxOfMin}`);
+        console.log(`Process started for user ${ctx.from.id} with minAmount: ${minAmount}, maxAmount: ${maxAmount}`);
 
         ctx.reply(`Process has started.\n` +
           `Payment Method: Wise\n` +
           `Maximum Price: $${state.MAX_PRICE || MAX_PRICE}\n` +
           `Minimum Amount: $${minAmount}\n` +
-          `Maximum Amount: $${maxOfMin}`)
+          `Maximum Amount: $${maxAmount}`)
       } else {
         ctx.reply('Invalid range. Ensure both numbers are positive and min is less than or equal to max. Example: 200-500');
       }

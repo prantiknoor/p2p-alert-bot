@@ -15,14 +15,14 @@ export class P2PAlertBybit extends EventEmitter {
     this.intervals = {}
   }
 
-  start(id, { paymentMethod, maxPrice, minAmount, maxOfMin }) {
+  start(id, { paymentMethod, maxPrice, minAmount, maxAmount }) {
     console.log("Started:", id);
 
     if (this.intervals[id]) clearInterval(this.intervals[id]);
 
     const _run = async () => {
       try {
-        const ads = await this.getP2POnlineAds({ paymentMethod, maxPrice, minAmount, maxOfMin });
+        const ads = await this.getP2POnlineAds({ paymentMethod, maxPrice, minAmount, maxAmount });
         console.log(ads.length);
 
         const formattedAds = ads.map((ad, i) => {
@@ -48,7 +48,7 @@ export class P2PAlertBybit extends EventEmitter {
     clearInterval(this.intervals[id]);
   }
 
-  async getP2POnlineAds({ paymentMethod, maxPrice, minAmount, maxOfMin }) {
+  async getP2POnlineAds({ paymentMethod, maxPrice, minAmount, maxAmount }) {
     const res = await this.client.getP2POnlineAds({
       tokenId: "USDT",
       currencyId: "USD",
@@ -61,10 +61,21 @@ export class P2PAlertBybit extends EventEmitter {
     const ads = res.result.items.filter(ad =>
       ad.payments.includes(paymentMethod)
       && parseFloat(ad.price) <= maxPrice
-      && parseFloat(ad.minAmount) >= minAmount
-      && parseFloat(ad.minAmount) <= maxOfMin
+      && parseFloat(ad.maxAmount) >= minAmount
+      && parseFloat(ad.minAmount) <= maxAmount
     ).sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
 
     return ads;
   }
 }
+
+/**
+ const ads = res.result.items
+  .filter(ad =>
+    ad.payments.includes(paymentMethod) &&
+    parseFloat(ad.price) <= maxPrice &&
+    parseFloat(ad.minAmount) <= maxAmount &&   // ad allows buying up to your max
+    parseFloat(ad.maxAmount) >= minAmount      // ad allows at least your min
+  )
+  .sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+ */
