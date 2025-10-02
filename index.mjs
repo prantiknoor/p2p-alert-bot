@@ -1,17 +1,16 @@
 import http from 'http';
+import https from 'https';
 import os from 'os';
 import bot from "./bot.mjs";
 
-// This server setup is intended for deployment on render.com, it has no other meaning.
 const PORT = 3000;
 const REDIRECT_URL = 'https://github.com/prantiknoor/p2p-alert-bot';
 
-// Utility function to get server IP
-function getServerIP() {
+// Utility: Get local (private) IP
+function getLocalIP() {
   const nets = os.networkInterfaces();
   for (const name of Object.keys(nets)) {
     for (const net of nets[name]) {
-      // Skip over non-IPv4 and internal (i.e. 127.0.0.1)
       if (net.family === 'IPv4' && !net.internal) {
         return net.address;
       }
@@ -20,25 +19,38 @@ function getServerIP() {
   return 'Unknown';
 }
 
+// Utility: Get public IP
+function getPublicIP(callback) {
+  https.get('https://api.ipify.org?format=json', (resp) => {
+    let data = '';
+    resp.on('data', chunk => data += chunk);
+    resp.on('end', () => {
+      try {
+        const json = JSON.parse(data);
+        callback(json.ip);
+      } catch {
+        callback('Error');
+      }
+    });
+  }).on("error", () => {
+    callback('Error');
+  });
+}
+
 const server = http.createServer((req, res) => {
-  if (req.url !== '/health') {
-    console.log(`${req.method} ${req.url} from ${req.socket.remoteAddress}`);
-  }
-  
-  if (req.url === '/health') {
+  if (req.url === '/ip') {
+    getPublicIP((publicIp) => {
+      const localIp = getLocalIP();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ localIp, publicIp }));
+    });
+  } else if (req.url === '/health' || req.url === '/ping') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.write('OK');
-  } else if (req.url === '/ping') {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.write('OK');
-  } else if (req.url === '/ip') {
-    const ip = getServerIP();
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.write(JSON.stringify({ ip }));
+    res.end('OK');
   } else {
     res.writeHead(302, { Location: REDIRECT_URL });
+    res.end();
   }
-  res.end();
 });
 
 server.listen(PORT, () => {
@@ -46,7 +58,6 @@ server.listen(PORT, () => {
 });
 
 setTimeout(() => {
-  // Start the bot using polling
   bot.launch(() => {
     console.log('Bot started successfully!');
   });
