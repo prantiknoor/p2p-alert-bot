@@ -39,7 +39,7 @@ export class P2PAlertBybit extends EventEmitter {
     }
 
     _run();
-    this.intervals[id] = setInterval(_run, 30 * 1000);
+    this.intervals[id] = setInterval(_run, 10 * 1000);
   }
 
   stop(id) {
